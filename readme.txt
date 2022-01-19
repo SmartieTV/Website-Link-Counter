@@ -1,19 +1,5 @@
-Copyright (c) 2022 SmartieTV (smartietv.de)
+DE:
+Dieses Programm ermöglicht es, kinderleicht alle (https) Links einer Website auszulesen, anzuzeigen, zu speichern und nach Duplikaten zu filtern. Über Feedback würde ich mich sehr freuen: info@4yourphone.de. Falls Du Vorschläge, einen gefundenen Bug oder Probleme mit dem Programm hast und Hilfe benötigst, wende Dich gerne an die E-Mail-Adresse.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+EN:
+This program makes it very easy to read, display, save and filter (by duplicates) all (https) links of a website. I'm very greatful for all kinds of feedback: info@4yourphone.de. If you have suggestions, found a bug or have issues with the program, do not hesitate to contact me. 

@@ -1,4 +1,5 @@
 # Website Link Counter by SmartieTV (smartietv.de or youtube.com/smartietv)
+version = ("220119.3")
 
 # Notwendige Libraries (bs4 erfordert manuellen Import)
 from bs4 import BeautifulSoup
@@ -15,8 +16,8 @@ deleteAllFiles = ("false") # Alle Result Dateien löschen. ACHTUNG, dies löscht
 printInConsole = ("true") # Ergebnisse in der Console anzeigen? Show results in Console? 
 
 # Experteneinstellungen / Expert settings:
-deleteCoolDown = 0.5 # Cooldown in Sekunden. Rate, in welcher Dateien gelöscht werden.
-deletionScope = 50 # Scope, in welchem alleinstehende Dateiendungen auch gefunden und gelöscht werden.
+deleteCoolDown = 0.2 # Cooldown in Sekunden. Rate, in welcher Dateien gelöscht werden. Default = 0.2
+deletionScope = 100 # Scope, in welchem alleinstehende Dateiendungen auch gefunden und gelöscht werden. Default = 100
 
 # Ende der Einstellungen, Beginn des Programms. / End of settings, start of program. 
   
