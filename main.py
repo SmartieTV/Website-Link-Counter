@@ -1,12 +1,30 @@
 # Website Link Counter by SmartieTV (smartietv.de or youtube.com/smartietv)
-version = ("220121.3")
+version = ("220128.24")
 
 # Notwendige Libraries (bs4 erfordert manuellen Import)
-from bs4 import BeautifulSoup
-import os
-import requests
-import re
-import time
+try:
+  from bs4 import BeautifulSoup
+  import os
+  import requests
+  import re
+  import time
+except Exception as e4:
+  print("Website Link Tool")
+  print("-----------------")
+  print("Version: " + str(version))
+  print("")
+  print("Erforderliche Libraries konnten nicht importiert werden! ")
+  print("Necesarry libraries could not be imported! ")
+  print("")
+  print("BeautifulSoup4 muss vorher installed werden:")
+  print("BeautifulSoup4 must be installed first:")
+  print("")
+  print("-> sudo pip install BeautifulSoup4")
+  print("oder/or")
+  print("-> sudo apt-get install python3-bs4")
+  print("")
+  print("Fehler / Error: (" + str(e4) + ").")
+  #exit()
   
 # URL hier eingeben: / Enter URL here (mit / with https://):
 scrape_url = ("") #Leer lassen, um URL im Programm einzugeben / Leave empty to enter URL in the program.
@@ -15,13 +33,21 @@ scrape_url = ("") #Leer lassen, um URL im Programm einzugeben / Leave empty to e
 deleteAllFiles = ("false") # Alle Result-Dateien löschen / Delete all result files?
 printInConsole = ("false") # Ergebnisse in der Console anzeigen / Show results in Console? 
 showDuplicates = ("true") #Mehrfach vorkommende Links in Datei anzeigen / Show duplicate links in file?
-checkForCookies = ("true") #Nach Cookies checken / Check for cookies? (COMING SOON)
-autoReformat = ("false") # Automatisch https:// an eingegebene Url (ohne dies) anhängen / Toggle automatically adding https:// to entered url (without). 
+checkForCookies = ("false") #Nach Cookies checken / Check for cookies? (COMING SOON)
+autoReformat = ("false") # Automatisch https:// an eingegebene Url (ohne dieses) anhängen / Toggle automatically adding https:// to entered url (without). 
+
+# Experimentelle Features:
+treeMode = ("false")
+# Dieser Modus scraped alle URL's auf der Website, indem es jede gefundene URL aufnimmt. 
+# This mode scrapes all URLs on the website, by including every found url.
 
 # Experteneinstellungen / Expert settings:
 deleteCoolDown = 0.2 # Cooldown in Sekunden. Rate, in welcher Dateien gelöscht werden. Default = 0.2
 deletionScope = 100 # Scope, in welchem alleinstehende Dateiendungen auch gefunden und gelöscht werden. Default = 100
-enableBugFix = ("true") # BugFix Modus / BugFix Mode
+treeModeCoolDown = 2.0 # Cooldown in Sekunden, in welchem im Treemode eine neue Seite aufgerufen und geparsed wird. Default = 2
+# Cooldown between scraping sites in treemode. 
+enableBugFix = ("false") # BugFix Modus / BugFix Mode
+
 
 
 # Ende der Einstellungen, Beginn des Programms. / End of settings, start of program. 
@@ -43,9 +69,14 @@ def deleteAllFilesFunc(): #Dateien löschen
   while runDeletion == ("true"):
     resultNr = resultNr + 1
     resultFileName = "result" + str(resultNr)
+    resultFileName2 = "result-TM" + str(resultNr)
     if os.path.exists(resultFileName):
       os.remove(resultFileName)
       print("Datei wurde entfernt: / File has been removed: " + str(resultFileName))
+      time.sleep(deleteCoolDown)
+    if os.path.exists(resultFileName2):
+      os.remove(resultFileName2)
+      print("Datei wurde entfernt: / File has been removed: " + str(resultFileName2))
       time.sleep(deleteCoolDown)
     elif resultNr < deletionScope:
       "Continue..."
@@ -65,6 +96,100 @@ def getCookies():#Retrieve cookies from entered url.
   for cookie in r2.cookies:
     print(cookie.__dict__)
     print(cookie.secure)
+
+def treeModeExec():
+  global result1List
+  try:
+    bugfix("Arrived at treeModeExec")
+    if treeMode == ("true") and deleteAllFiles == ("false"):
+      bugfix("treeMode == true")
+      resultCountTree = 0
+      result1Tree = ""
+      scrapedList = [""]
+      startTimeTree = time.time()
+      resultNr = 0
+      bugfix("Starting treemode...")
+      bugfix("Result1List contents: " + str(result1List))
+      for urlInTreeMode in result1List:
+        if urlInTreeMode in scrapedList:
+          bugfix("Ignored url (" + str(urlInTreeMode) + "), because it has already been scraped. ")
+        else:
+          scrapedList.append(urlInTreeMode)
+
+          result1List = list(dict.fromkeys(result1List)) #Removes duplicates
+          bugfix("Treemode - Current URL: (" + str(urlInTreeMode) + "). ")
+          if scrape_url in urlInTreeMode:
+            html_document = htmlDoc(urlInTreeMode)
+            soup = BeautifulSoup(html_document, 'html.parser')
+            for link in soup.find_all('a',attrs={'href': re.compile("^https://")}):
+              resultCountTree = resultCountTree + 1
+              if printInConsole == ("true"):
+                print(link.get('href'))
+              result1Tree = result1Tree + "\n" + str(resultCountTree) + ") " + str(link.get("href"))  
+              result1List.append(link.get("href"))
+            bugfix("Running cooldown (" + str(treeModeCoolDown) + "s).")
+            time.sleep(treeModeCoolDown)
+          else:
+            bugfix("Treemode - URL: (" + str(urlInTreeMode) + ") is not in scrape_url, ignoring it. " )
+      resultCountFromList = len(result1List)
+      resultCountFromListExclDups = len(set(result1List))
+      duplicates = resultCountFromList - resultCountFromListExclDups
+      endTimeTree = time.time()
+      print("")
+      print("Programm erfolgreich beendet. / Program finished successfully.")
+      print("Ergebnisse / Results: ")
+      print("")
+      print("Gesamt / Total: " + str(resultCountFromList))
+      print("Einzigartig / Unique: " + str(resultCountFromListExclDups))
+      print("Duplikate / Duplicates: " + str(duplicates))
+      print("Benötigte Zeit / Elapsed Time: " + str(endTimeTree - startTimeTree) + "s")
+      bugfix("Finished treemode! All url's from scrape_url parsed.")
+      bugfix("Logging results to file.")
+      runTreeModeFileSearch = ("true")
+      resultFileNameTree = ("result-TM1")
+      while runTreeModeFileSearch == ("true"):
+        if os.path.exists(resultFileNameTree): #Bereits existierende Dateien ignorieren. 
+          "SKIP"
+          bugfix("File exists already (" + str(resultFileNameTree) + "), increasing by 1.")
+          resultNr = resultNr + 1
+          resultFileNameTree = "result-TM" + str(resultNr)
+        else:
+          runTreeModeFileSearch = ("false")
+          print("Gespeichert in der Datei: / Saved in the file: " + str(resultFileNameTree))
+          bugfix("Found file to log results to: (" + str(resultFileNameTree) + ").")
+          f = open(resultFileNameTree, "a")
+          f.write("Gesamt / Total: " + str(resultCountFromList) + "\n")
+          f.write("Einzigartig / Unique: " + str(resultCountFromListExclDups) + "\n")
+          f.write("Duplikate / Duplicates: " + str(duplicates) + "\n")
+          f.write("Benötigte Zeit / Elapsed Time: " + str(endTimeTree - startTimeTree) + "s\n")
+          f.write("Anfang des Ergebnisses: / Start of result: \n")
+          f.write("------------------------------------------\n")
+          iCount = 0
+          for i in set(result1List):
+            result1ListLogContent = [""]
+            if showDuplicates == ("false"):
+              if i in result1ListLogContent:
+                "IGNORE"
+                bugfix("Logging issue: (" + str(i) + ") is already logged, ignoring it. ")
+              else:
+                result1ListLogContent.append(i)
+                iCount = iCount + 1
+                f.write(str(iCount) + ") " + str(i) + "\n")
+            else:
+              iCount = iCount + 1
+              f.write(str(iCount) + ") " + str(i) + "\n")
+          f.write("\nEnde des Ergebnisses. / End of result.")
+          f.close()
+          bugfix("Treemode logging complete. ")
+      bugfix("Treemode finished. ")
+  except Exception as e18:
+    bugfix("An error occured while running treeMode exec: " + str(e18))
+    print("Während dem treeMode ist ein Fehler aufgetreten!")
+    print("An error occured while running treeMode exec! ")
+    print("Fehler / Error: " + str(e18))
+
+
+
 
 bugfix("Arrived in program.")
 
@@ -199,6 +324,7 @@ while programRunning == ("true"):
           print("")
           print("Ergebnis wurde in folgender Datei gespeichert: (" + str(resultFileName) + ").")
           print("Result has been saved in the following file: (" + str(resultFileName) + ").")
+    treeModeExec()
       
     if deleteAllFiles == ("true"):
       "Nothin" #Script um Dateien zu löschen, nur aktiviert bei manueller Variablenumstellung.
@@ -209,7 +335,9 @@ while programRunning == ("true"):
     print("Ein kritischer Fehler ist aufgetreten! A critical error occured!")
     print("Fehler / Error: " + str(e1))
 
-  bugfix("Arrived at end of program.")
+  
+
+  bugfix("Arrived at the end of the program.")
   scrape_url = ("") #Resets scrape URL
   re_go = ("true")
 # Ende des Programms / End of Program
