@@ -2,7 +2,7 @@
 # Lese readme.txt für weitere Informationen und eine Anleitung. 
 # View readme.txt for further information and instructions. 
 
-version = ("220225.02")
+version = ("220225.04")
 
 # Notwendige Libraries (bs4 erfordert manuellen Import)
 try:
@@ -13,22 +13,27 @@ try:
   import time #Used for time delays.
   #import random #Unused
 except Exception as e4:
-  print("Website Tool")
-  print("------------")
-  print("Version: " + str(version))
-  print("")
-  print("Erforderliche Libraries konnten nicht importiert werden! ")
-  print("Necesarry libraries could not be imported! ")
-  print("")
-  print("BeautifulSoup4 muss vorher installed werden:")
-  print("BeautifulSoup4 must be installed first:")
-  print("")
-  print("-> sudo pip install BeautifulSoup4")
-  print("oder/or")
-  print("-> sudo apt-get install python3-bs4")
-  print("")
-  print("Fehler / Error: (" + str(e4) + ").")
-  #exit()
+  try:
+    exec("sudo pip install BeautifulSoup4")
+    exec("sudo apt-get install python3-bs4")
+  except Exception as e4b:
+    print("Website Tool")
+    print("------------")
+    print("Version: " + str(version))
+    print("")
+    print("Erforderliche Libraries konnten nicht importiert werden! ")
+    print("Necesarry libraries could not be imported! ")
+    print("")
+    print("BeautifulSoup4 muss vorher installed werden:")
+    print("BeautifulSoup4 must be installed first:")
+    print("")
+    print("-> sudo pip install BeautifulSoup4")
+    print("oder/or")
+    print("-> sudo apt-get install python3-bs4")
+    print("")
+    print("Fehler 1 / Error 1: (" + str(e4) + ").")
+    print("Fehler 2 / Error 2: (" + str(e4b) + ").")
+    #exit()
   
 # URL hier eingeben: / Enter URL here (mit / with https://):
 scrape_url = ("") #Leer lassen, um URL im Programm einzugeben / Leave empty to enter URL in the program.
@@ -71,6 +76,8 @@ def deleteAllFilesFunc(): #Dateien löschen
   resultNr = 0
   runDeletion = ("true")
   while runDeletion == ("true"):
+    bugfix("Beginning deletion process.")
+    print("")
     resultNr = resultNr + 1
     resultFileName = "result" + str(resultNr)
     resultFileName2 = "result-TM" + str(resultNr)
@@ -88,10 +95,10 @@ def deleteAllFilesFunc(): #Dateien löschen
       runDeletion = ("false")
       print("""
 Alle Dateien erfolgreich gelöscht!
-Starte das Programm erneut und ändere ggf die Variable wieder zu false.
-
+Starte das Programm erneut.
+            
 All files deleted successfully!
-Restart the program and optionally change the variable back to false, to use the program as usual. 
+Restart the program to continue.
       """)
       exit()
 
@@ -199,10 +206,12 @@ def treeModeExec():
           print("Gespeichert in der Datei: / Saved in the file: " + str(resultFileNameTree))
           bugfix("Found file to log results to: (" + str(resultFileNameTree) + ").")
           f = open(resultFileNameTree, "a")
+          f.write("URL: " + str(scrape_url) + "\n")
           f.write("Gesamt / Total: " + str(resultCountFromList) + "\n")
           f.write("Einzigartig / Unique: " + str(resultCountFromListExclDups) + "\n")
           f.write("Duplikate / Duplicates: " + str(duplicates) + "\n")
           f.write("Benötigte Zeit / Elapsed Time: " + str(endTimeTree - startTimeTree) + "s\n")
+          f.write("Startzeit / Starting time: " + str(startTime) + " (UNIX)\n")
           f.write("Anfang des Ergebnisses: / Start of result: \n")
           f.write("------------------------------------------\n")
           iCount = 0
@@ -221,6 +230,7 @@ def treeModeExec():
               f.write(str(iCount) + ") " + str(i) + "\n")
           iCountCookies = 0
           iCookie = ""
+          f.write("------------------------------------------\n")
           f.write("\n Ende der Urls / End of urls. \n")
           f.write("Cookies: \n")
           for iCookie in set(cookieList):
@@ -259,10 +269,7 @@ while programRunning == ("true"):
           print("")
           print("Wichtig / Important:")
           print("Überprüfe nur Websites, welche du besitzt und/oder scrapen + überprüfen darfst. ")
-          print("Only check websites, which you own and/or have the permission to scrape + check. ")
-          print("")
-          print("Result-Dateien löschen / Delete result files:")
-          print("-> delallfiles")
+          print("Only check websites, which you own and/or have the permission to scrape + check. ")          
           print("")
           print("Optionelle Parameter / Optional parameters:")
           print("( -t): TreeMode - Status:" + str(treeMode))
@@ -270,19 +277,20 @@ while programRunning == ("true"):
           print("( -picT / -picF): Show results in console (true/false) - Status: " + str(printInConsole))
           print("( -cfcT / -cfcF): Check for cookies (true/false) - Status: " + str(checkForCookies))
           print("( -sdT / -shF): Show duplicates in result file (true/false) - Status: " + str(showDuplicates))
+          print("(delallfiles): Delete all result files.")
+          print("")
         if treeMode == ("true"):
-          print("""
-TreeMode ist aktiv!
-TreeMode is active!
-          """)
-        print("")
+          print("TreeMode = Active")
+        else:
+          print("TreeMode = Not Active")
         print("-------------------------")
         print("URL eingeben / Enter URL:")
         print("Beispiel / Example: https://example.com")
         print("")
         scrape_url = input("URL: ")
         if ("delfiles") in scrape_url or ("delallfiles") in scrape_url:
-          print("Dateien werden gelöscht. ")
+          print("")
+          print("Dateien werden gelöscht / Files are being deleted.")
           deleteAllFilesFunc()
         if "https://" in scrape_url or "http://" in scrape_url:
           bugfix("URL-Check successful: Found http/https.")
@@ -309,35 +317,38 @@ TreeMode is active!
           else:
             scrape_url = newUrl
             bugfix("Changing url automatically. ")
-          #Check for different options
-          scrape_url_split = scrape_url.split(" ")
-          for i in scrape_url_split:
-            if ("https://") in i or ("http://") in i:
-              scrape_url = i
-            if ("-t") in i:
-              treeMode = ("true")
-              bugfix("(-t) detected! Activating treeMode.")
-            elif ("-b") in i:
-              enableBugFix = ("true")
-              bugfix("(-b) detected! Activating bugFix.")
-            elif ("-picT") in i:
-              printInConsole = ("true")
-              bugfix("(-picT) detected! Activating printInConsole.")
-            elif ("-picF") in i:
-              printInConsole = ("false")
-              bugfix("(-picF) detected! Deactivating printInConsole.")
-            elif ("-cfcT") in i:
-              checkForCookies = ("true")
-              bugfix("(-cfcT) detected! Activating checkForCookies.")
-            elif ("-cfcF") in i:
-              checkForCookies = ("false")
-              bugfix("(-cfcF) detected! Deactivating checkForCookies.")
-            elif ("-sdT") in i:
-              showDuplicates = ("true")
-              bugfix("(-sdT) detected! Activating showDuplicates.")
-            elif ("-sdF") in i:
-              showDuplicates = ("false")
-              bugfix("(-sdF) detected! Deactivating showDuplicates.")
+        #Check for optional parameters
+        scrape_url_split = scrape_url.split(" ")
+        for i in scrape_url_split:
+          if ("https://") in i or ("http://") in i:
+            scrape_url = i
+          if ("-t") in i:
+            treeMode = ("true")
+            bugfix("(-t) detected! Activating treeMode.")
+          elif ("-b") in i:
+            enableBugFix = ("true")
+            bugfix("(-b) detected! Activating bugFix.")
+          elif ("-picT") in i:
+            printInConsole = ("true")
+            bugfix("(-picT) detected! Activating printInConsole.")
+          elif ("-picF") in i:
+            printInConsole = ("false")
+            bugfix("(-picF) detected! Deactivating printInConsole.")
+          elif ("-cfcT") in i:
+            checkForCookies = ("true")
+            bugfix("(-cfcT) detected! Activating checkForCookies.")
+          elif ("-cfcF") in i:
+            checkForCookies = ("false")
+            bugfix("(-cfcF) detected! Deactivating checkForCookies.")
+          elif ("-sdT") in i:
+            showDuplicates = ("true")
+            bugfix("(-sdT) detected! Activating showDuplicates.")
+          elif ("-sdF") in i:
+            showDuplicates = ("false")
+            bugfix("(-sdF) detected! Deactivating showDuplicates.")
+          elif ("-d") in i:
+            scrape_url = ("delallfiles")
+            bugfix("(-d) detected! Initiating sequence for deleting all files.")
           
       # URL zum scrapen
       bugfix("Arrived in scraping mode (non-treemode).")
@@ -387,10 +398,12 @@ TreeMode is active!
       else:
         if showDuplicates == ("true"):
           f = open(resultFileName, "a")
+          f.write("URL: " + str(scrape_url) + "\n")
           f.write("Gesamt / Total: " + str(resultCountFromList) + "\n")
           f.write("Einzigartig / Unique: " + str(resultCountFromListExclDups) + "\n")
           f.write("Duplikate / Duplicates: " + str(duplicates) + " (Angezeigt / Showing)\n")
           f.write("Benötigte Zeit / Elapsed Time: " + str(endTime - startTime) + "s\n")
+          f.write("Startzeit / Starting time: " + str(startTime) + " (UNIX)\n")
           f.write("Anfang des Ergebnisses: / Start of result: \n")
           f.write("------------------------------------------\n")
           f.write(str(result1))
@@ -401,6 +414,7 @@ TreeMode is active!
             for iCookie in set(cookieList):
               iCountCookies = iCountCookies + 1
               f.write(str(iCountCookies) + ") " + str(iCookie) + "\n")
+          f.write("------------------------------------------\n")
           f.write("\nEnde des Ergebnisses. / End of result.")
           f.close()
           run = ("false")
@@ -409,10 +423,12 @@ TreeMode is active!
           print("Result has been saved in the following file: (" + str(resultFileName) + ").")
         else:
           f = open(resultFileName, "a")
+          f.write("URL: " + str(scrape_url) + "\n")
           f.write("Gesamt / Total: " + str(resultCountFromList) + "\n")
           f.write("Einzigartig / Unique: " + str(resultCountFromListExclDups) + "\n")
           f.write("Duplikate / Duplicates: " + str(duplicates) + " (Versteckt / Hidden)\n")
           f.write("Benötigte Zeit / Elapsed Time: " + str(endTime - startTime) + "s\n")
+          f.write("Startzeit / Starting time: " + str(startTime) + " (UNIX)\n")
           f.write("Anfang des Ergebnisses: / Start of result: \n")
           f.write("------------------------------------------\n")
           #f.write(str(set(result1List)))
@@ -427,6 +443,7 @@ TreeMode is active!
             for iCookie in set(cookieList):
               iCountCookies = iCountCookies + 1
               f.write(str(iCountCookies) + ") " + str(iCookie) + "\n")
+          f.write("------------------------------------------\n")
           f.write("\nEnde des Ergebnisses. / End of result.")
           f.close()
           run = ("false")
