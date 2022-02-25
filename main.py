@@ -2,16 +2,16 @@
 # Lese readme.txt für weitere Informationen und eine Anleitung. 
 # View readme.txt for further information and instructions. 
 
-version = ("220202.08")
+version = ("220225.02")
 
 # Notwendige Libraries (bs4 erfordert manuellen Import)
 try:
-  from bs4 import BeautifulSoup
-  import os
-  import requests
-  import re
-  import time
-  #import random # Unused
+  from bs4 import BeautifulSoup #Used for parsing html data.
+  import os #Used for system-related tasks.
+  import requests #Used for requesting web page.
+  import re #Used with bs4 to parse data.
+  import time #Used for time delays.
+  #import random #Unused
 except Exception as e4:
   print("Website Tool")
   print("------------")
@@ -37,7 +37,7 @@ scrape_url = ("") #Leer lassen, um URL im Programm einzugeben / Leave empty to e
 deleteAllFiles = ("false") # Alle Result-Dateien löschen / Delete all result files?
 printInConsole = ("true") # Ergebnisse in der Console anzeigen / Show results in Console? 
 showDuplicates = ("true") #Mehrfach vorkommende Links in Datei anzeigen / Show duplicate links in file?
-checkForCookies = ("true") #Nach Cookies checken / Check for cookies? (COMING SOON)
+checkForCookies = ("false") #Nach Cookies checken / Check for cookies? (Disable to decrease load time measurably)
 autoReformat = ("false") # Automatisch https:// an eingegebene Url (ohne dieses) anhängen / Toggle automatically adding https:// to entered url (without). 
 
 # Experimentelle Features:
@@ -256,15 +256,24 @@ while programRunning == ("true"):
           print("Website Tool")
           print("------------")
           print("Version: " + str(version))
+          print("")
           print("Wichtig / Important:")
           print("Überprüfe nur Websites, welche du besitzt und/oder scrapen + überprüfen darfst. ")
           print("Only check websites, which you own and/or have the permission to scrape + check. ")
           print("")
           print("Result-Dateien löschen / Delete result files:")
           print("-> delallfiles")
+          print("")
+          print("Optionelle Parameter / Optional parameters:")
+          print("( -t): TreeMode - Status:" + str(treeMode))
+          print("( -b): BugFix - Status: " + str(enableBugFix))
+          print("( -picT / -picF): Show results in console (true/false) - Status: " + str(printInConsole))
+          print("( -cfcT / -cfcF): Check for cookies (true/false) - Status: " + str(checkForCookies))
+          print("( -sdT / -shF): Show duplicates in result file (true/false) - Status: " + str(showDuplicates))
         if treeMode == ("true"):
           print("""
-          TreeMode ist aktiv!
+TreeMode ist aktiv!
+TreeMode is active!
           """)
         print("")
         print("-------------------------")
@@ -300,6 +309,35 @@ while programRunning == ("true"):
           else:
             scrape_url = newUrl
             bugfix("Changing url automatically. ")
+          #Check for different options
+          scrape_url_split = scrape_url.split(" ")
+          for i in scrape_url_split:
+            if ("https://") in i or ("http://") in i:
+              scrape_url = i
+            if ("-t") in i:
+              treeMode = ("true")
+              bugfix("(-t) detected! Activating treeMode.")
+            elif ("-b") in i:
+              enableBugFix = ("true")
+              bugfix("(-b) detected! Activating bugFix.")
+            elif ("-picT") in i:
+              printInConsole = ("true")
+              bugfix("(-picT) detected! Activating printInConsole.")
+            elif ("-picF") in i:
+              printInConsole = ("false")
+              bugfix("(-picF) detected! Deactivating printInConsole.")
+            elif ("-cfcT") in i:
+              checkForCookies = ("true")
+              bugfix("(-cfcT) detected! Activating checkForCookies.")
+            elif ("-cfcF") in i:
+              checkForCookies = ("false")
+              bugfix("(-cfcF) detected! Deactivating checkForCookies.")
+            elif ("-sdT") in i:
+              showDuplicates = ("true")
+              bugfix("(-sdT) detected! Activating showDuplicates.")
+            elif ("-sdF") in i:
+              showDuplicates = ("false")
+              bugfix("(-sdF) detected! Deactivating showDuplicates.")
           
       # URL zum scrapen
       bugfix("Arrived in scraping mode (non-treemode).")
@@ -413,3 +451,7 @@ while programRunning == ("true"):
   re_go = ("true")
 # Ende des Programms / End of Program
 bugfix("Arrived outside of (programmRunning) loop. (THIS SHOULD NOT HAPPEN!)")
+
+if __name__ == "__main__":
+  "Coming soon."
+  bugfix("__name__ == __main__ is true!")
