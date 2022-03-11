@@ -2,7 +2,7 @@
 # Lese readme.txt für weitere Informationen und eine Anleitung. 
 # View readme.txt for further information and instructions. 
 
-version = ("220225.04")
+version = ("220311.08")
 
 # Notwendige Libraries (bs4 erfordert manuellen Import)
 try:
@@ -14,8 +14,10 @@ try:
   #import random #Unused
 except Exception as e4:
   try:
-    exec("sudo pip install BeautifulSoup4")
-    exec("sudo apt-get install python3-bs4")
+    import pip
+    pip.main(["install","BeautifulSoup4"])
+    pip.main(["install","python3-bs4"])
+    from bs4 import BeautifulSoup #Used for parsing html data.
   except Exception as e4b:
     print("Website Tool")
     print("------------")
@@ -42,7 +44,7 @@ scrape_url = ("") #Leer lassen, um URL im Programm einzugeben / Leave empty to e
 deleteAllFiles = ("false") # Alle Result-Dateien löschen / Delete all result files?
 printInConsole = ("true") # Ergebnisse in der Console anzeigen / Show results in Console? 
 showDuplicates = ("true") #Mehrfach vorkommende Links in Datei anzeigen / Show duplicate links in file?
-checkForCookies = ("false") #Nach Cookies checken / Check for cookies? (Disable to decrease load time measurably)
+checkForCookies = ("false") #Nach Cookies checken / Check for cookies? (BETA - Can cause huge loading times - depending on amount of cookies.)
 autoReformat = ("false") # Automatisch https:// an eingegebene Url (ohne dieses) anhängen / Toggle automatically adding https:// to entered url (without). 
 
 # Experimentelle Features:
@@ -56,8 +58,7 @@ deletionScope = 100 # Scope, in welchem alleinstehende Dateiendungen auch gefund
 treeModeCoolDown = 2.0 # Cooldown in Sekunden, in welchem im Treemode eine neue Seite aufgerufen und geparsed wird. Default = 2
 # Cooldown between scraping sites in treemode. 
 enableBugFix = ("false") # BugFix Modus / BugFix Mode
-
-
+excludeKeywords = [".jpg",".png",".mp4",".webp",".img",".pdf",".heic",".gif",".avi",".mov",".mpg"] # Wenn die URL diese Keywords enthält, wird sie übersprungen / If the URL contains one of these keywords, it gets skipped. Nur im treeMode / Only in treeMode.
 
 # Ende der Einstellungen, Beginn des Programms. / End of settings, start of program. 
   
@@ -75,12 +76,13 @@ def deleteAllFilesFunc(): #Dateien löschen
   global resultNr
   resultNr = 0
   runDeletion = ("true")
+  bugfix("Beginning deletion process, scope: " + str(deletionScope))
   while runDeletion == ("true"):
-    bugfix("Beginning deletion process.")
     print("")
     resultNr = resultNr + 1
     resultFileName = "result" + str(resultNr)
     resultFileName2 = "result-TM" + str(resultNr)
+    bugfix("Attempting to delete: (" + str(resultFileName) + ") and (" + str(resultFileName2) + ").")
     if os.path.exists(resultFileName):
       os.remove(resultFileName)
       print("Datei wurde entfernt: / File has been removed: " + str(resultFileName))
@@ -138,12 +140,16 @@ def getCookies(cookie_url, inTreeMode):#Retrieve cookies from entered url.
 
 def treeModeExec():
   global result1List
+  global scrapeList
+  global excludedList
   try:
     bugfix("Arrived at treeModeExec")
     if treeMode == ("true") and deleteAllFiles == ("false"):
       bugfix("treeMode == true")
       resultCountTree = 0
+      excludedList = 0
       result1Tree = ""
+      scrapeList = 0
       scrapedList = [""]
       startTimeTree = time.time()
       resultNr = 0
@@ -154,28 +160,39 @@ def treeModeExec():
           bugfix("Ignored url (" + str(urlInTreeMode) + "), because it has already been scraped. ")
         else:
           scrapedList.append(urlInTreeMode)
-
           result1List = list(dict.fromkeys(result1List)) #Removes duplicates
           bugfix("Treemode - Current URL: (" + str(urlInTreeMode) + "). ")
           if scrape_url in urlInTreeMode:
-            html_document = htmlDoc(urlInTreeMode)
-            soup = BeautifulSoup(html_document, 'html.parser')
-            bugfix("Beginning compilation mode for current url. ")
-            for link in soup.find_all('a',attrs={'href': re.compile("^https://")}):
-              resultCountTree = resultCountTree + 1
-              if printInConsole == ("true"):
-                print(link.get('href'))
-              result1Tree = result1Tree + "\n" + str(resultCountTree) + ") " + str(link.get("href"))  
-              result1List.append(link.get("href"))
-            if checkForCookies == ("true"):
-              bugfix("Check for cookies for current url active, calling function. ")
-              try:
-                urlForCookieCheck = str(urlInTreeMode)
-                getCookies(urlForCookieCheck,"true")
-              except Exception as e20:
-                bugfix("Could not check for cookies for current url! Skipping it: " + str(urlInTreeMode) +" / Reason: " +  str(e20))
-            bugfix("Running cooldown (" + str(treeModeCoolDown) + "s).")
-            time.sleep(treeModeCoolDown)
+            excludeUrl = ("false")
+            for excludeWord in excludeKeywords:
+              if excludeWord in urlInTreeMode:
+                excludeUrl = ("true")
+                bugfix("Treemode - Found excludeWord (" + str(excludeWord) + ") in URL (" + str(urlInTreeMode) + ").")
+              else:
+                "PASS"
+            if excludeUrl == ("false"):
+              scrapeList += 1
+              html_document = htmlDoc(urlInTreeMode)
+              soup = BeautifulSoup(html_document, 'html.parser')
+              bugfix("Beginning compilation mode for current url. ")
+              for link in soup.find_all('a',attrs={'href': re.compile("^https://")}):
+                if printInConsole == ("true"):
+                  print(link.get('href'))
+                result1Tree = result1Tree + "\n" + str(resultCountTree) + ") " + str(link.get("href"))  
+                resultCountTree = resultCountTree + 1
+                result1List.append(link.get("href"))
+              if checkForCookies == ("true"):
+                bugfix("Check for cookies for current url active, calling function. ")
+                try:
+                  urlForCookieCheck = str(urlInTreeMode)
+                  getCookies(urlForCookieCheck,"true")
+                except Exception as e20:
+                  bugfix("Could not check for cookies for current url! Skipping it: " + str(urlInTreeMode) +" / Reason: " +  str(e20))
+              bugfix("Running cooldown (" + str(treeModeCoolDown) + "s).")
+              time.sleep(treeModeCoolDown)
+            else:
+              excludedList += 1
+              bugfix("Treemode - URL: (" + str(urlInTreeMode) + ") is contains a word from excludeWord, ignoring it.")
           else:
             bugfix("Treemode - URL: (" + str(urlInTreeMode) + ") is not in scrape_url, ignoring it.")
       bugfix("Treemode - Finished scraping all urls. ")
@@ -187,9 +204,11 @@ def treeModeExec():
       print("Programm erfolgreich beendet. / Program finished successfully.")
       print("Ergebnisse / Results: ")
       print("")
+      print("Webseiten / Websites: " + str(scrapeList))
       print("Gesamt / Total: " + str(resultCountFromList))
       print("Einzigartig / Unique: " + str(resultCountFromListExclDups))
       print("Duplikate / Duplicates: " + str(duplicates))
+      print("Ausgeschlossen / Excluded: " + str(excludedList))
       print("Benötigte Zeit / Elapsed Time: " + str(endTimeTree - startTimeTree) + "s")
       bugfix("Finished treemode! All url's from scrape_url parsed.")
       bugfix("Logging results to file.")
@@ -207,6 +226,8 @@ def treeModeExec():
           bugfix("Found file to log results to: (" + str(resultFileNameTree) + ").")
           f = open(resultFileNameTree, "a")
           f.write("URL: " + str(scrape_url) + "\n")
+          f.write("Webseiten / Websites: " + str(scrapeList) + "\n")
+          f.write("Ausgeschlossen / Excluded: " + str(excludedList) + "\n")
           f.write("Gesamt / Total: " + str(resultCountFromList) + "\n")
           f.write("Einzigartig / Unique: " + str(resultCountFromListExclDups) + "\n")
           f.write("Duplikate / Duplicates: " + str(duplicates) + "\n")
@@ -268,15 +289,16 @@ while programRunning == ("true"):
           print("Version: " + str(version))
           print("")
           print("Wichtig / Important:")
-          print("Überprüfe nur Websites, welche du besitzt und/oder scrapen + überprüfen darfst. ")
+          print("Überprüfe nur Websites, welche du besitzt und/oder scrapen & überprüfen darfst. ")
           print("Only check websites, which you own and/or have the permission to scrape + check. ")          
           print("")
           print("Optionelle Parameter / Optional parameters:")
-          print("( -t): TreeMode - Status:" + str(treeMode))
-          print("( -b): BugFix - Status: " + str(enableBugFix))
-          print("( -picT / -picF): Show results in console (true/false) - Status: " + str(printInConsole))
-          print("( -cfcT / -cfcF): Check for cookies (true/false) - Status: " + str(checkForCookies))
-          print("( -sdT / -shF): Show duplicates in result file (true/false) - Status: " + str(showDuplicates))
+          print("( -t): TreeMode - Status: [" + str(treeMode) + "]")
+          print("( -b): BugFix - Status: [" + str(enableBugFix) + "]")
+          print("( -picT / -picF): Show results in console (true/false) - Status: [" + str(printInConsole) + "]")
+          print("( -cfcT / -cfcF): Check for cookies (true/false) BETA - Status: [" + str(checkForCookies) + "]")
+          print("( -sdT / -shF): Show duplicates in result file (true/false) - Status: [" + str(showDuplicates) + "]")
+          print("( -ltmc): Lower the cooldown to 0.5s, use with caution! - Status: [" + str(treeModeCoolDown) + "s]")
           print("(delallfiles): Delete all result files.")
           print("")
         if treeMode == ("true"):
@@ -346,18 +368,15 @@ while programRunning == ("true"):
           elif ("-sdF") in i:
             showDuplicates = ("false")
             bugfix("(-sdF) detected! Deactivating showDuplicates.")
-          elif ("-d") in i:
-            scrape_url = ("delallfiles")
-            bugfix("(-d) detected! Initiating sequence for deleting all files.")
+          elif ("-ltmc") in i:
+            treeModeCoolDown = (0.5)
+            bugfix("(-ltmc) detected! Setting treeModeCoolDown to 0.5s.")
           
       # URL zum scrapen
       bugfix("Arrived in scraping mode (non-treemode).")
       html_document = htmlDoc(scrape_url)
       soup = BeautifulSoup(html_document, 'html.parser')
       print("URL wird analysiert... / URL is being analyzed...")
-      #print("")
-      #print("URL: " + str(scrape_url))
-      #time.sleep(1)
       print("")
       startTime = time.time()
       # Zeigt alle Ergebnisse mit einem href Tag und https://
@@ -431,7 +450,6 @@ while programRunning == ("true"):
           f.write("Startzeit / Starting time: " + str(startTime) + " (UNIX)\n")
           f.write("Anfang des Ergebnisses: / Start of result: \n")
           f.write("------------------------------------------\n")
-          #f.write(str(set(result1List)))
           iCount = 0
           for i in set(result1List):
             iCount = iCount + 1
